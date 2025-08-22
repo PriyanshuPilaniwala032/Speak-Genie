@@ -1,0 +1,6 @@
+google-generativeai
+speechrecognition
+gtts
+playsound==1.2.2
+langdetect
+python-dotenv
