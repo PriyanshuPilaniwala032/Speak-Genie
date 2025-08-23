@@ -1,5 +1,5 @@
 import speech_recognition as sr
-import google.generativeai as genai # New import for Gemini
+import google.generativeai as genai
 from gtts import gTTS
 import os
 import playsound
@@ -78,7 +78,7 @@ def generate_report(conversation_history):
     report_model = genai.GenerativeModel('gemini-1.5-flash')
     report_chat = report_model.start_chat(history=conversation_history)
     
-    report_prompt = "Based on our conversation, please provide a simple, two-sentence report on my English speaking performance. Mention one thing I did well and one thing to improve."
+    report_prompt = "Based on our conversation, please provide a simple, two-sentence report on my speaking performance. Mention one thing I did well and one thing to improve."
     
     try:
         report = report_chat.send_message(report_prompt).text
@@ -94,7 +94,7 @@ def personal_chatbot():
     print("You can start speaking now. Say 'quit' to exit.")
 
     system_prompt = (
-        "You are a friendly and encouraging English tutor for children. Keep your responses short and engaging. "
+        "You are a friendly and encouraging tutor for children. Keep your responses short and engaging. "
         "IMPORTANT: If the user speaks in a language other than English, you MUST reply in that same language."
     )
     
@@ -128,7 +128,7 @@ def roleplay():
         print("You can start speaking now. Say 'quit' to exit.")
         
         system_prompt = (
-            f"Let's roleplay. The scenario is '{scenario}'. You are a friendly character in this scenario, and I am a child learning English. "
+            f"Let's roleplay. The scenario is '{scenario}'. You are a friendly character in this scenario, and I am a child learning. "
             "IMPORTANT: If I speak in a language other than English, you MUST reply in that same language. "
             "Now, please start the conversation."
         )
