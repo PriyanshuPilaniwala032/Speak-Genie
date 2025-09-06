@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popular n8n Workflows</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-cyan-400">n8n Workflow Popularity Dashboard</h1>
+            <p class="text-gray-400 mt-2">The most popular n8n workflows from across the web, ranked by a universal popularity score.</p>
+            
+            <!-- NEW: Refresh Button and Status Message -->
+            <div class="mt-6">
+                <button id="refresh-button" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                    Refresh Data
+                </button>
+                <p id="status-message" class="text-gray-500 text-sm mt-2 h-5"></p>
+            </div>
+        </header>
+
+        <div id="loading" class="text-center">
+            <p class="text-xl">Loading workflows...</p>
+        </div>
+
+        <main id="workflows-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Workflow cards will appear here -->
+        </main>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000';
+        const refreshButton = document.getElementById('refresh-button');
+        const statusMessage = document.getElementById('status-message');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchWorkflows();
+        });
+
+        refreshButton.addEventListener('click', async () => {
+            statusMessage.textContent = 'Starting data refresh... This may take a few minutes.';
+            refreshButton.disabled = true;
+            refreshButton.classList.add('opacity-50', 'cursor-not-allowed');
+
+            try {
+                const response = await fetch(`${API_URL}/refresh`, { method: 'POST' });
+                const result = await response.json();
+                statusMessage.textContent = result.message;
+
+                // Since the script runs in the background, we'll wait a reasonable amount of time
+                // before automatically fetching the new data. 90 seconds is a safe bet.
+                setTimeout(() => {
+                    statusMessage.textContent = 'Fetching updated data...';
+                    fetchWorkflows();
+                }, 90000); // 90 seconds
+
+            } catch (error) {
+                statusMessage.textContent = 'Error starting refresh process.';
+                console.error('Refresh error:', error);
+                refreshButton.disabled = false;
+                refreshButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+
+        async function fetchWorkflows() {
+            const container = document.getElementById('workflows-container');
+            const loadingIndicator = document.getElementById('loading');
+            
+            statusMessage.textContent = 'Fetching latest workflows...';
+            loadingIndicator.style.display = 'block';
+
+            try {
+                const response = await fetch(`${API_URL}/workflows`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const workflows = await response.json();
+                
+                loadingIndicator.style.display = 'none';
+                container.innerHTML = '';
+
+                if (workflows.length === 0) {
+                    container.innerHTML = '<p class="text-center col-span-full">No workflows found.</p>';
+                    return;
+                }
+
+                workflows.forEach(workflow => {
+                    const card = createWorkflowCard(workflow);
+                    container.appendChild(card);
+                });
+                statusMessage.textContent = `Displaying ${workflows.length} unique workflows.`;
+
+            } catch (error) {
+                loadingIndicator.innerHTML = `<p class="text-red-400">Failed to load workflows. Make sure the API server is running. <br> Error: ${error.message}</p>`;
+                statusMessage.textContent = 'Error fetching data.';
+            } finally {
+                refreshButton.disabled = false;
+                refreshButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function createWorkflowCard(workflow) {
+            const card = document.createElement('a');
+            card.href = workflow.link;
+            card.target = '_blank';
+            card.className = 'bg-gray-800 border border-gray-700 rounded-lg p-5 flex flex-col justify-between hover:border-cyan-500 transition-all duration-300 shadow-lg';
+
+            const platformColors = { 'Forum': 'bg-blue-500', 'YouTube': 'bg-red-600', 'GitHub': 'bg-gray-600' };
+            const platformColor = platformColors[workflow.platform] || 'bg-gray-500';
+
+            let metricsHtml = '';
+            if (workflow.platform === 'YouTube' || workflow.platform === 'Forum') {
+                metricsHtml = `<span class="text-sm">Views: ${(workflow.popularity_metrics.views || 0).toLocaleString()}</span><span class="text-sm">Likes: ${(workflow.popularity_metrics.likes || 0).toLocaleString()}</span>`;
+            } else if (workflow.platform === 'GitHub') {
+                metricsHtml = `<span class="text-sm">⭐ Stars: ${(workflow.popularity_metrics.stars || 0).toLocaleString()}</span><span class="text-sm">Forks: ${(workflow.popularity_metrics.forks || 0).toLocaleString()}</span>`;
+            }
+
+            card.innerHTML = `
+                <div>
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="px-2 py-1 text-xs font-semibold text-white ${platformColor} rounded">${workflow.platform}</span>
+                        <div class="text-right">
+                            <div class="font-bold text-lg text-cyan-400">${workflow.score}</div>
+                            <div class="text-xs text-gray-400">Score</div>
+                        </div>
+                    </div>
+                    <h2 class="text-lg font-semibold text-gray-200 mb-2">${workflow.workflow}</h2>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-700 flex justify-around text-gray-400">${metricsHtml}</div>
+            `;
+            return card;
+        }
+    </script>
+
+</body>
+</html>
+
