@@ -5,26 +5,20 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-# Initialize the FastAPI app
 app = FastAPI(
     title="n8n Workflow Popularity API",
     description="Provides a list of popular n8n workflows from Forum, YouTube, and GitHub.",
     version="1.0.0"
 )
 
-# --- IMPORTANT FOR FRONTEND ---
-# This allows your index.html file to fetch data from your API
-# without being blocked by browser security policies (CORS).
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allows all origins (for simplicity in this project)
+    allow_origins=["*"], 
     allow_credentials=True,
-    allow_methods=["*"], # Allows all HTTP methods
-    allow_headers=["*"], # Allows all headers
+    allow_methods=["*"], 
+    allow_headers=["*"], 
 )
 
-
-# Define the path to your final dataset
 DATA_FILE = 'final_dataset.json'
 
 def run_pipeline_script():
@@ -34,9 +28,7 @@ def run_pipeline_script():
     """
     print("Starting data pipeline execution...")
     try:
-        # Ensure we use the same Python interpreter that is running the API
         python_executable = sys.executable
-        # Run the main.py script. It will print its own progress.
         process = subprocess.run(
             [python_executable, "main.py"],
             capture_output=True,
@@ -61,7 +53,6 @@ def get_workflows():
             data = json.load(f)
         return JSONResponse(content=data)
     except FileNotFoundError:
-        # If the data file doesn't exist, return error
         raise HTTPException(
             status_code=404, 
             detail="Dataset not found. Please run the main.py script first to generate it."
@@ -85,4 +76,3 @@ def trigger_refresh(background_tasks: BackgroundTasks):
 @app.get("/", tags=["Health Check"])
 def read_root():
     return {"status": "API is running. Visit /docs for documentation."}
-
