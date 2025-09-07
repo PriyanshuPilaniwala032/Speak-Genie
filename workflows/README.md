@@ -56,5 +56,3 @@ To view the frontend open the ```index.html``` file in your web browser to see t
 ```GET /```: Retrieves the complete, ranked list of popular workflows. This is the primary data endpoint.
 
 ```POST /refresh```: Triggers the main.py data collection script to run as a background process, allowing for on-demand data updates.
-
-You can view interactive API documentation by running the server and visiting ```http://127.0.0.1:8000/docs.```
